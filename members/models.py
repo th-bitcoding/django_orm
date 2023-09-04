@@ -15,11 +15,14 @@ class Members(models.Model):
     club_members = models.CharField(max_length=100)
     flag = models.BooleanField(default=False)
 
-    def __str__(self):
-        return self.group
+    # def __str__(self):
+    #     return self.group
     
 
 class CsvFile(models.Model):
     csv_file = models.FileField(upload_to='csv_files/')
+
+    def __str__(self):
+        return self.csv_file
 
     

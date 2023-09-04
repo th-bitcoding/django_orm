@@ -20,47 +20,30 @@ class CsvData(APIView):
         if serializer.is_valid():
             csv = serializer.validated_data['csv_file']
             readcsv = pd.read_csv(csv)
-            # existing_data = Members.objects.all()
-            # existing_records = {(entry.group, entry.club): entry for entry in existing_data}
+            lst=[]
+            lst2=[]
 
-            # lst=[]
-            Members.objects.all().delete()
-            for _, row in readcsv.iterrows():
-                group = row['group']
-                club = row['club']
-                club_members = row['club_members']
-                # lst.append(club_members)
+            for key, row in readcsv.iterrows():
+                lst.append({'group':row['group'],'club':row['club'],'club_members':row['club_members']})
                 
-                Members.objects.create(group=group, club=club, club_members=club_members)
+            data = Members.objects.all()
+            for i in data:
+                lst2.append({'group':i.group,'club':i.club,'club_members':i.club_members})
 
-                # Get all existing records that match the criteria
-                # existing_records = Members.objects.filter(group=group, club=club,club_members=club_members)
-
-                # if existing_records.exists():
-                #     # Update each existing record
-                #     for existing_record in existing_records:
-                #         existing_record.club_members = club_members
-
-                #         existing_record.save()
-                # else:
-                #     Members.objects.filter(group=group,club=club).exclude(club_members__in =lst)
-                #     # Create a new record if no matching records exist
-                #     Members.objects.create(group=group, club=club, club_members=club_members)
-                # print('****',lst)
-
-            #     if (group, club) in existing_records:
-            #         existing_record = existing_records[(group, club)]
-            #         existing_record.club_members = club_members
-            #         existing_record.save()
-            #     else:
-            #         existing_record = Members(
-            #             group=group,
-            #             club=club,
-            #             club_members=club_members,
-            #         )
-                    
-            #         existing_record.save()
-            # print('***',existing_record.club_members)
+            for item in lst:
+                if item not in lst2:
+                    Members.objects.update_or_create(group=item['group'],club=item['club'],club_members=item['club_members'])
+            
+            records_to_delete = Members.objects.exclude(
+                group__in=[item['group'] for item in lst],
+                club__in=[item['club'] for item in lst],
+                club_members__in=[item['club_members'] for item in lst]
+            )
+            records_to_delete.delete()
+  
             return Response({"status": "success"},
                         status.HTTP_201_CREATED)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+
